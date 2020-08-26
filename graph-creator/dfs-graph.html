@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Random Network Graph</title>
+    <style>
+        html, body, #container {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+    <script src="https://cdn.anychart.com/releases/8.8.0/js/anychart-core.min.js"></script>
+    <script src="https://cdn.anychart.com/releases/8.8.0/js/anychart-graph.min.js"></script>
+    <script src="https://cdn.anychart.com/releases/8.8.0/js/anychart-data-adapter.min.js"></script>
+
+</head>
+<body>
+<div id="container"></div>
+<script>
+
+    function randomGraphGenerator(size) {
+        const grand_sample = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const sample = grand_sample.substr(0, size).split("")
+
+        const nodes = sample.map(nodeName => ({"id": nodeName}))
+
+        const edges = sample.flatMap((nodeName, idx) => {
+            const nodeFrom = nodeName;
+            const nodesTo = [];
+
+            let possibleDestinations = sample.slice(idx+1)
+            if (possibleDestinations.length > 0) {
+                const randomNEdges = Math.floor(Math.random() * (possibleDestinations.length / 2)) + 1 // 1-3 edges per nodes
+
+                for ( let i = 0; i < randomNEdges; i++) {
+                    let randomIdx = Math.floor(Math.random() * possibleDestinations.length)
+                    nodesTo.push(possibleDestinations.splice(randomIdx, 1)[0])
+                }
+            }
+
+            return nodesTo.map( node => ({"from": nodeFrom, "to": node, "weight": Math.floor(Math.random() * 10) + 1}))
+        })
+
+        const data = {}
+        data.nodes = nodes
+        data.edges = edges
+
+        console.log(data)
+
+        return data
+    }
+
+    function convertToChrisChart(data) {
+        console.log(data)
+        const chartData = data.nodes.map( node => {
+
+            const edges = data.edges
+                .filter(edge => edge.from === node.id || edge.to === node.id)
+                .map( edge => ({node1: edge.from, node2: edge.to, weight: edge.weight}) )
+
+
+            return {
+                label: node.id,
+                edges: edges
+            }
+        })
+        console.log(chartData)
+
+        return chartData
+    }
+
+    function drawChart(data) {
+        var chart = anychart.graph(data);
+        var nodes = chart.nodes()
+        // set the size of nodes
+        nodes.normal().height(30);
+        nodes.hovered().height(45);
+        nodes.selected().height(45);
+
+        // set the fill of nodes
+        nodes.normal().fill("#ffa000");
+        nodes.hovered().fill("white");
+        nodes.selected().fill("#ffa000");
+
+        // set the stroke of nodes
+        nodes.normal().stroke(null);
+        nodes.hovered().stroke("#333333", 3);
+        nodes.selected().stroke("#333333", 3);
+
+        // enable the labels of nodes
+        chart.nodes().labels().enabled(true);
+
+        // configure the labels of nodes
+        chart.nodes().labels().format("{%id}");
+        chart.nodes().labels().fontSize(12);
+        chart.nodes().labels().fontWeight(600);
+
+        chart.edges().labels().enabled(true);
+        // configure the labels of nodes
+        chart.edges().labels().format("{%weight}");
+        chart.edges().labels().fontSize(12);
+        chart.edges().labels().fontWeight(600);
+
+        // set the title
+        chart.title("Random network graph");
+
+        // draw the chart
+        chart.container("container").draw();
+    }
+
+    sampleData = randomGraphGenerator(10)
+    convertToChrisChart(sampleData)
+    drawChart(sampleData)
+</script>
+</body>
+</html>
